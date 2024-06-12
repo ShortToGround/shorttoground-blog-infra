@@ -1,0 +1,58 @@
+---
+- name: Setup Blog
+  hosts: all
+  tasks:
+      - name: Update/upgrade apt packages
+        become: true
+        apt:
+          update_cache: yes
+          upgrade: yes
+          
+      - name: install nginx
+        become: true
+        apt: name=nginx state=latest
+      
+      # Temporary solution for dynamic blog FQDN
+      # Once I move nginx setup to docker/containers this will no longer be needed
+      - name: Set global environment variable for domain name
+        become: true
+        become_method: sudo
+        become_flags: 'su - root /bin/bash -c'
+        command: 'echo "BLOG_FQDN={{ BLOG_FQDN }}\n" >> sudo /etc/environment'
+
+      - name: Create blog dir
+        become: true
+        ansible.builtin.file:
+          path: /var/www/blog
+          state: directory
+        
+
+      # After the instance was provisioned with Terraform, the CICD platform should have added this file
+      - name: Copy Nginx conf
+        become: true
+        command: cp /tmp/blog.conf /etc/nginx/sites-available/blog.conf
+
+      # Same for the previous task, this should have been added by the CICD platform
+      - name: Copy blog data
+        become: true
+        command: cp -r /tmp/public /var/www/blog
+
+      - name: Create symlink to new site data
+        become: true
+        file:
+          src: /etc/nginx/sites-available/blog.conf
+          dest: /etc/nginx/sites-enabled/blog.conf
+          state: link
+
+      - name: Remove default symlink 
+        become: true
+        file:
+          path: /etc/nginx/sites-enabled/default
+          state: absent
+        ignore_errors: true
+
+      - name: restart nginx service
+        become: true
+        service:
+          name: nginx
+          state: restarted
