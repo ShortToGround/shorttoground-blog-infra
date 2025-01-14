@@ -10,10 +10,19 @@
           
       - name: install nginx
         become: true
-        apt: name=nginx state=latest
+        apt: 
+          name: nginx 
+          state: latest
       
+      - name: checkout repo
+        ansible.buildin.git:
+          repo: 'https://github.com/ShortToGround/shorttoground-blog.git'
+          dest: /tmp/shorttoground-blog
+
+
       # Temporary solution for dynamic blog FQDN
       # Once I move nginx setup to docker/containers this will no longer be needed
+      # TODO: Rewrite this in lineinfile module to avoid using bash here 
       - name: Set global environment variable for domain name
         become: true
         become_method: sudo
@@ -30,7 +39,7 @@
       # After the instance was provisioned with Terraform, the CICD platform should have added this file
       - name: Copy Nginx conf
         become: true
-        command: cp /tmp/blog.conf /etc/nginx/sites-available/blog.conf
+        command: cp /tmp/shorttoground-blog/nginx/blog.conf /etc/nginx/sites-available/blog.conf
 
       # Same for the previous task, this should have been added by the CICD platform
       - name: Copy blog data
