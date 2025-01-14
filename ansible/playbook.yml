@@ -15,7 +15,7 @@
           state: latest
       
       - name: checkout repo
-        ansible.buildin.git:
+        ansible.builtin.git:
           repo: 'https://github.com/ShortToGround/shorttoground-blog.git'
           dest: /tmp/shorttoground-blog
 
