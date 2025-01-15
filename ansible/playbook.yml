@@ -57,6 +57,7 @@
         copy:
           src: /tmp/shorttoground-blog/nginx/blog.conf
           dest: /etc/nginx/sites-available/blog.conf
+          remote_src: yes
 
       # Same for the previous task, this should have been added by the CICD platform
       - name: Copy blog data
@@ -64,6 +65,7 @@
         copy:
           src: /tmp/public
           dest: /var/www/blog
+          remote_src: yes
         
 
 
