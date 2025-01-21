@@ -1,8 +1,10 @@
 ---
     - name: Setup Blog
       hosts: all
+      vars:
+        # TODO: Add check later, if current_branch is an empty string then default to master repo
+        current_branch: "{{ lookup('env', 'CURRENT_BRANCH') }}"
       tasks:
-
           - name: Install dependencies
             become: true
             apt:
@@ -62,6 +64,7 @@
             git:
               repo: 'https://github.com/ShortToGround/shorttoground-blog.git'
               dest: /tmp/shorttoground-blog
+              version: {{ current_branch }}
             
           - name: Remove older version of blog container
             become: true
