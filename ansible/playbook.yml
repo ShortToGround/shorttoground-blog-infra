@@ -62,7 +62,6 @@
             git:
               repo: 'https://github.com/ShortToGround/shorttoground-blog.git'
               dest: /tmp/shorttoground-blog
-              refspec: dev
             
           - name: Remove older version of blog container
             become: true
