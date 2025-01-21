@@ -64,7 +64,7 @@
             git:
               repo: 'https://github.com/ShortToGround/shorttoground-blog.git'
               dest: /tmp/shorttoground-blog
-              version: {{ current_branch }}
+              version: "{{ current_branch }}"
             
           - name: Remove older version of blog container
             become: true
