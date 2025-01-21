@@ -5,22 +5,6 @@
         # TODO: Add check later, if current_branch is an empty string then default to master repo
         current_branch: "{{ lookup('env', 'CURRENT_BRANCH') }}"
       tasks:
-          - name: Install dependencies
-            become: true
-            apt:
-              package:
-                - apt-transport-https
-                - ca-certificates
-                - curl
-                - software-properties-common
-                - python3-pip
-                - virtualenv
-                - python3-setuptools
-                - git
-              state: latest
-              update_cache: true    
-            
-            
           - name: Add Docker GPG apt Key
             become: true
             apt_key:
@@ -33,25 +17,22 @@
               repo: deb https://download.docker.com/linux/ubuntu focal stable
               state: present
 
-          - name: Update/upgrade apt packages
-            become: true
-            apt:
-              update_cache: yes
-              upgrade: yes
-              
-          - name: Install docker package
+          - name: Install dependencies
             become: true
             apt:
               package:
+                - apt-transport-https
+                - ca-certificates
+                - curl
+                - software-properties-common
+                - python3-pip
+                - virtualenv
+                - python3-setuptools
+                - git
                 - docker-ce
+                - python3-docker
               state: latest
-
-          - name: Install Python Docker Module
-            become: true
-            apt:
-              package:
-                  - python3-docker
-              state: latest
+              update_cache: true    
 
           - name: Login to Github Container Registry
             become: true
