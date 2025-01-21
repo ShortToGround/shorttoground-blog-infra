@@ -1,90 +1,89 @@
 ---
-- name: Setup Blog
-  hosts: all
-  tasks:
-      - name: Update/upgrade apt packages
-        become: true
-        apt:
-          update_cache: yes
-          upgrade: yes
+    - name: Setup Blog
+      hosts: all
+      tasks:
 
-      - name: Install dependencies
-        become: true
-        apt:
-          package:
-            - git
-            - nginx 
-          state: latest
+          - name: Install dependencies
+            become: true
+            apt:
+              package:
+                - apt-transport-https
+                - ca-certificates
+                - curl
+                - software-properties-common
+                - python3-pip
+                - virtualenv
+                - python3-setuptools
+                - git
+              state: latest
+              update_cache: true    
+            
+            
+          - name: Add Docker GPG apt Key
+            become: true
+            apt_key:
+              url: https://download.docker.com/linux/ubuntu/gpg
+              state: present
 
-    #   - name: install nginx
-    #     become: true
-    #     apt: 
-    #       name: nginx 
-    #       state: latest
-      
-      - name: checkout repo
-        git:
-          repo: 'https://github.com/ShortToGround/shorttoground-blog.git'
-          dest: /tmp/shorttoground-blog
+          - name: Add Docker Repository
+            become: true
+            apt_repository:
+              repo: deb https://download.docker.com/linux/ubuntu focal stable
+              state: present
 
+          - name: Update/upgrade apt packages
+            become: true
+            apt:
+              update_cache: yes
+              upgrade: yes
+              
+          - name: Install docker package
+            become: true
+            apt:
+              package:
+                - docker-ce
+              state: latest
 
-      # Temporary solution for dynamic blog FQDN
-      # Once I move nginx setup to docker/containers this will no longer be needed
-      # TODO: Rewrite this in lineinfile module to avoid using bash here 
+          - name: Install Python Docker Module
+            become: true
+            apt:
+              package:
+                  - python3-docker
+              state: latest
 
-    #   - name: Set global environment variable for domain name
-    #     become: true
-    #     become_method: sudo
-    #     become_flags: 'su - root /bin/bash -c'
-    #     command: 'echo "BLOG_FQDN={{ BLOG_FQDN }}\n" >> sudo /etc/environment'
+          - name: Login to Github Container Registry
+            become: true
+            community.docker.docker_login:
+              username: "{{ GHCR_USERNAME }}"
+              password: "{{ GHCR_TOKEN }}"
+              registry_url: https://ghcr.io/shorttoground/shorttoground-blog
 
-      - name: Set global environment variable for domain name
-        become: true
-        lineinfile:
-          path: /etc/environment
-          line: BLOG_FQDN={{ BLOG_FQDN }}\n
+          - name: checkout repo
+            git:
+              repo: 'https://github.com/ShortToGround/shorttoground-blog.git'
+              dest: /tmp/shorttoground-blog
+              refspec: dev
+            
+          - name: Remove older version of blog container
+            become: true
+            docker_container:
+              name: shorttoground-blog-container
+              state: absent
 
-      - name: Create blog dir
-        become: true
-        file:
-          path: /var/www/blog
-          state: directory
-        
+          - name: Pull and start blog container
+            become: true
+            docker_container:
+              name: shorttoground-blog-container
+              image: ghcr.io/shorttoground/shorttoground-blog-container:latest
+              state: started
+              expose:
+                - 8080
+              ports: 
+                - '0.0.0.0:80:8080'
 
-      # After the instance was provisioned with Terraform, the CICD platform should have added this file
-      - name: Copy Nginx conf
-        become: true
-        copy:
-          src: /tmp/shorttoground-blog/nginx/blog.conf
-          dest: /etc/nginx/sites-available/blog.conf
-          remote_src: yes
-
-      # Same for the previous task, this should have been added by the CICD platform
-      - name: Copy blog data
-        become: true
-        copy:
-          src: /tmp/public
-          dest: /var/www/blog
-          remote_src: yes
-        
-
-
-      - name: Create symlink to new site data
-        become: true
-        file:
-          src: /etc/nginx/sites-available/blog.conf
-          dest: /etc/nginx/sites-enabled/blog.conf
-          state: link
-
-      - name: Remove default symlink 
-        become: true
-        file:
-          path: /etc/nginx/sites-enabled/default
-          state: absent
-        ignore_errors: true
-
-      - name: restart nginx service
-        become: true
-        service:
-          name: nginx
-          state: restarted
+          # Logs out of GHCR, which should delete the plain text ghcr token stored on the host
+          - name: Logout of Github Container Registry
+            become: true
+            community.docker.docker_login:
+              registry_url: https://ghcr.io/shorttoground/shorttoground-blog
+              state: absent
