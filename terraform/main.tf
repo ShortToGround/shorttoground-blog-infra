@@ -78,6 +78,10 @@ resource "aws_instance" "app_server" {
   tags = {
     Name = "static-site"
   }
+  provisioner "remote-exec" {  # This should wait for cloud-init to finish, that way we know when we can connect to the VM
+    inline = [ "echo 'Waiting for cloud-init'",  
+    "cloud-init status --wait > /dev/null"]  
+  }
 }
 
 provider "cloudflare" {
