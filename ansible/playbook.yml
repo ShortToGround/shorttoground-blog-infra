@@ -64,6 +64,7 @@
                 - '0.0.0.0:80:8080'
 
           - name: Prune all unused and dangling images
+            become: true
             community.docker.docker_prune:
               containers: true
               images: true
