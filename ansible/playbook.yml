@@ -57,6 +57,7 @@
             docker_container:
               name: shorttoground-blog-container
               image: ghcr.io/shorttoground/shorttoground-blog-container:latest
+              pull: true
               expose:
                 - 8080
               ports: 
