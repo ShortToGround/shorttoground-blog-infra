@@ -57,10 +57,17 @@
             docker_container:
               name: shorttoground-blog-container
               image: ghcr.io/shorttoground/shorttoground-blog-container:latest
+              pull: true
               expose:
                 - 8080
               ports: 
                 - '0.0.0.0:80:8080'
+
+          - name: Prune all unused and dangling images
+            become: true
+            community.docker.docker_prune:
+              containers: true
+              images: true
 
           # Logs out of GHCR, which should delete the plain text ghcr token stored on the host
           - name: Logout of Github Container Registry
