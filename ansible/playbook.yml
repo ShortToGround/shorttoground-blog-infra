@@ -5,6 +5,14 @@
         # TODO: Add check later, if current_branch is an empty string then default to master repo
         current_branch: "{{ lookup('env', 'CURRENT_BRANCH') }}"
       tasks:
+          - name: Install gpg
+            become: true
+            apt:
+              package:
+                - gnupg
+              state: latest
+              update_cache: true  
+
           - name: Add Docker GPG apt Key
             become: true
             apt_key:
@@ -29,8 +37,7 @@
                 - git
                 - docker-ce
                 - python3-docker
-              state: latest
-              update_cache: true    
+              state: latest  
 
           - name: Login to Github Container Registry
             become: true
