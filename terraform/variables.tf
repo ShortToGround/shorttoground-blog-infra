@@ -17,3 +17,13 @@ variable "SSH_PUBLIC_KEY" {
   type      = string
   sensitive = true
 }
+
+variable "SSH_PRIVATE_KEY" {
+  type      = string
+  sensitive = true
+}
+
+variable "SSH_USER" {
+  type      = string
+  sensitive = true
+}

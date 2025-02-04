@@ -40,6 +40,7 @@ resource "aws_security_group" "web_server_defaults" {
         cidr_blocks = ["0.0.0.0/0"]
     }
 
+    # I know I know, public facing SSH is a no-no but this is a simple learning project and not prod :D
     ingress {
         from_port   = 22
         to_port     = 22
@@ -78,11 +79,21 @@ resource "aws_instance" "app_server" {
   tags = {
     Name = "static-site"
   }
+  connection {
+    type     = "ssh"
+    user     = var.SSH_USER
+    private_key = var.SSH_PRIVATE_KEY
+    host     = self.public_ip
+  }
+
   provisioner "remote-exec" {  # This should wait for cloud-init to finish, that way we know when we can connect to the VM
     inline = [ "echo 'Waiting for cloud-init'",  
-    "cloud-init status --wait > /dev/null"]  
+    "cloud-init status --wait > /dev/null"]
   }
+
 }
+
+
 
 provider "cloudflare" {
   api_token = var.CLOUDFLARE_API_TOKEN
